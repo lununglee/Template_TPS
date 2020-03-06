@@ -8,6 +8,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/Controller.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "Bullet.h"
 
 //////////////////////////////////////////////////////////////////////////
 // ATPSCharacter
@@ -50,12 +51,14 @@ ATPSCharacter::ATPSCharacter()
 //////////////////////////////////////////////////////////////////////////
 // Input
 
-void ATPSCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent)
+void	ATPSCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent)
 {
 	// Set up gameplay key bindings
 	check(PlayerInputComponent);
 	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ACharacter::Jump);
 	PlayerInputComponent->BindAction("Jump", IE_Released, this, &ACharacter::StopJumping);
+
+	PlayerInputComponent->BindAction("Shoot", IE_Pressed, this, &ATPSCharacter::Shoot);
 
 	PlayerInputComponent->BindAxis("MoveForward", this, &ATPSCharacter::MoveForward);
 	PlayerInputComponent->BindAxis("MoveRight", this, &ATPSCharacter::MoveRight);
@@ -77,34 +80,34 @@ void ATPSCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInput
 }
 
 
-void ATPSCharacter::OnResetVR()
+void	ATPSCharacter::OnResetVR()
 {
 	UHeadMountedDisplayFunctionLibrary::ResetOrientationAndPosition();
 }
 
-void ATPSCharacter::TouchStarted(ETouchIndex::Type FingerIndex, FVector Location)
+void	ATPSCharacter::TouchStarted(ETouchIndex::Type FingerIndex, FVector Location)
 {
 		Jump();
 }
 
-void ATPSCharacter::TouchStopped(ETouchIndex::Type FingerIndex, FVector Location)
+void	ATPSCharacter::TouchStopped(ETouchIndex::Type FingerIndex, FVector Location)
 {
 		StopJumping();
 }
 
-void ATPSCharacter::TurnAtRate(float Rate)
+void	ATPSCharacter::TurnAtRate(float Rate)
 {
 	// calculate delta for this frame from the rate information
 	AddControllerYawInput(Rate * BaseTurnRate * GetWorld()->GetDeltaSeconds());
 }
 
-void ATPSCharacter::LookUpAtRate(float Rate)
+void	ATPSCharacter::LookUpAtRate(float Rate)
 {
 	// calculate delta for this frame from the rate information
 	AddControllerPitchInput(Rate * BaseLookUpRate * GetWorld()->GetDeltaSeconds());
 }
 
-void ATPSCharacter::MoveForward(float Value)
+void	ATPSCharacter::MoveForward(float Value)
 {
 	if ((Controller != NULL) && (Value != 0.0f))
 	{
@@ -118,7 +121,7 @@ void ATPSCharacter::MoveForward(float Value)
 	}
 }
 
-void ATPSCharacter::MoveRight(float Value)
+void	ATPSCharacter::MoveRight(float Value)
 {
 	if ( (Controller != NULL) && (Value != 0.0f) )
 	{
@@ -131,4 +134,18 @@ void ATPSCharacter::MoveRight(float Value)
 		// add movement in that direction
 		AddMovementInput(Direction, Value);
 	}
+}
+
+void	ATPSCharacter::Shoot()
+{
+	UE_LOG(LogTemp, Warning, TEXT("Bang bang"));
+	// Spawn Transform
+	FTransform				SpawnTransform = GetActorTransform();
+	SpawnTransform.SetLocation(FollowCamera->GetComponentRotation().Vector() * 200.f + GetActorLocation());
+
+	// Spawn Paramters
+	FActorSpawnParameters	SpawnParams {};
+
+	// Spawn Object
+	GetWorld()->SpawnActor<ABullet>(Bullet, SpawnTransform, SpawnParams);
 }
